@@ -1,0 +1,26 @@
+{
+  "name": "petconnect-prototype",
+  "version": "1.0.0",
+  "description": "Prototipo funcional do PetConnect com frontend, backend e Leaflet + OpenStreetMap.",
+  "main": "backend/dist/main.js",
+  "scripts": {
+    "build": "tsc -b backend/tsconfig.json --force",
+    "check": "tsc -p backend/tsconfig.json --noEmit",
+    "dev": "npm run build && node backend/dist/main.js",
+    "start": "node backend/dist/main.js"
+  },
+  "keywords": [
+    "petconnect",
+    "ong",
+    "doacoes",
+    "leaflet",
+    "openstreetmap"
+  ],
+  "author": "",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PetConnect</title>
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#home" aria-label="PetConnect">
+        <span class="brand-mark">♥</span>
+        <span>PetConnect</span>
+      </a>
+      <nav class="main-nav" aria-label="Navegação principal">
+        <a href="#campanhas">Campanhas</a>
+        <a href="#denuncias">Denúncias</a>
+        <a href="#ongs">ONGs</a>
+        <a href="#voluntariado">Voluntariado</a>
+      </nav>
+      <button class="primary-button small-button" id="loginButton" type="button">Entrar</button>
+    </header>
+
+    <main id="home">
+      <section class="hero-section">
+        <div class="hero-copy">
+          <span class="eyebrow">Tubarão e região</span>
+          <h1>Transforme vidas com pequenos gestos</h1>
+          <p>
+            Campanhas, denúncias geolocalizadas e oportunidades de voluntariado
+            reunidas em uma rede solidária para animais em situação de rua.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-button" href="#denuncias">Fazer denúncia</a>
+            <a class="ghost-button" href="#campanhas">Ver campanhas</a>
+          </div>
+          <dl class="stat-row" id="heroStats">
+            <div>
+              <dt>0</dt>
+              <dd>Animais ajudados</dd>
+            </div>
+            <div>
+              <dt>0</dt>
+              <dd>ONGs locais</dd>
+            </div>
+            <div>
+              <dt>0</dt>
+              <dd>Apoiadores</dd>
+            </div>
+          </dl>
+        </div>
+        <div class="hero-media" aria-label="Cachorro resgatado">
+          <img
+            src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=1100&q=85"
+            alt="Cachorros resgatados em área externa"
+          />
+        </div>
+      </section>
+
+      <section class="content-section" id="campanhas">
+        <div class="section-heading">
+          <p class="eyebrow">Campanhas ativas</p>
+          <h2>Ajuda direcionada para quem está cuidando</h2>
+        </div>
+        <div class="card-grid" id="campaignGrid"></div>
+      </section>
+
+      <section class="content-section map-section" id="denuncias">
+        <div class="section-heading">
+          <p class="eyebrow">Denúncias geolocalizadas</p>
+          <h2>Mapa de animais em situação de rua</h2>
+        </div>
+        <div class="map-layout">
+          <div class="map-panel">
+            <div id="mapCanvas" class="map-canvas" role="application" aria-label="Mapa de denúncias"></div>
+            <div class="map-status" id="mapStatus">Carregando mapa...</div>
+          </div>
+          <form class="report-form" id="reportForm">
+            <h3>Registrar denúncia</h3>
+            <label>
+              Título
+              <input name="title" type="text" value="Animal precisa de ajuda" required />
+            </label>
+            <label>
+              Descrição
+              <textarea name="description" rows="4" required>Animal avistado em situação de risco.</textarea>
+            </label>
+            <div class="form-row">
+              <label>
+                Urgência
+                <select name="urgency">
+                  <option>Alta</option>
+                  <option selected>Média</option>
+                  <option>Baixa</option>
+                </select>
+              </label>
+              <label>
+                Bairro ou referência
+                <input name="address" type="text" value="Centro, Tubarão - SC" />
+              </label>
+            </div>
+            <div class="coordinate-row">
+              <span>Lat: <strong id="selectedLat">-28.4806</strong></span>
+              <span>Lng: <strong id="selectedLng">-49.0064</strong></span>
+            </div>
+            <button class="primary-button full-button" type="submit">Enviar denúncia</button>
+          </form>
+        </div>
+        <div class="report-list" id="reportList"></div>
+      </section>
+
+      <section class="content-section muted-section" id="ongs">
+        <div class="section-heading">
+          <p class="eyebrow">ONGs da região</p>
+          <h2>Organizações conectadas</h2>
+        </div>
+        <div class="card-grid" id="ngoGrid"></div>
+      </section>
+
+      <section class="content-section" id="voluntariado">
+        <div class="volunteer-layout">
+          <div>
+            <p class="eyebrow">Seja voluntário</p>
+            <h2>Tempo, habilidade e presença também salvam vidas</h2>
+            <p>
+              Escolha uma frente de apoio e registre seu interesse. A equipe da
+              ONG recebe sua candidatura pelo painel administrativo.
+            </p>
+          </div>
+          <form class="volunteer-form" id="volunteerForm">
+            <label>
+              Nome
+              <input name="name" type="text" required />
+            </label>
+            <label>
+              Email
+              <input name="email" type="email" required />
+            </label>
+            <label>
+              Vaga
+              <select name="role">
+                <option>Passeador de cães</option>
+                <option>Apoio em feiras de adoção</option>
+                <option>Fotografia voluntária</option>
+              </select>
+            </label>
+            <button class="primary-button full-button" type="submit">Candidatar-se</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <strong>PetConnect</strong>
+        <p>Conectando pessoas, ONGs e animais que precisam de cuidado.</p>
+      </div>
+      <span>Protótipo acadêmico funcional</span>
+    </footer>
+
+    <dialog class="modal" id="donationModal">
+      <form method="dialog" class="modal-box" id="donationForm">
+        <button class="icon-button close-button" type="button" data-close="donationModal" aria-label="Fechar">×</button>
+        <h3 id="donationTitle">Apoiar campanha</h3>
+        <input name="campaignId" type="hidden" />
+        <label>
+          Nome
+          <input name="donorName" type="text" value="Doador PetConnect" required />
+        </label>
+        <label>
+          Tipo
+          <select name="type" id="donationType">
+            <option value="money">Dinheiro</option>
+            <option value="food">Ração ou alimento</option>
+          </select>
+        </label>
+        <label id="moneyField">
+          Valor em R$
+          <input name="amount" type="number" min="1" step="1" value="25" />
+        </label>
+        <label id="foodField" hidden>
+          Descrição da doação
+          <input name="foodDescription" type="text" placeholder="Ex.: 5kg de ração" />
+        </label>
+        <button class="primary-button full-button" value="default" type="submit">Confirmar apoio</button>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="loginModal">
+      <form method="dialog" class="modal-box" id="loginForm">
+        <button class="icon-button close-button" type="button" data-close="loginModal" aria-label="Fechar">×</button>
+        <h3>Entrar no PetConnect</h3>
+        <label>
+          Nome de exibição
+          <input name="name" type="text" value="Visitante solidário" required />
+        </label>
+        <button class="primary-button full-button" value="default" type="submit">Entrar</button>
+      </form>
+    </dialog>
+
+    <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

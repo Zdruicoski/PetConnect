@@ -1,0 +1,17 @@
+{
+  "name": "petconnect-backend",
+  "version": "1.0.0",
+  "description": "API REST TypeScript do PetConnect.",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -b tsconfig.json --force",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "dev": "npm run build && node dist/main.js",
+    "start": "node dist/main.js"
+  },
+  "private": true,
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "typescript": "^5.7.2"
+  }
+}
