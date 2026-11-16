@@ -20,7 +20,10 @@
         <a href="#ongs">ONGs</a>
         <a href="#voluntariado">Voluntariado</a>
       </nav>
-      <button class="primary-button small-button" id="loginButton" type="button">Entrar</button>
+      <div class="session-box">
+        <button class="primary-button small-button" id="loginButton" type="button">Entrar</button>
+        <button class="ghost-button small-button" id="logoutButton" type="button" hidden>Sair</button>
+      </div>
     </header>
 
     <main id="home">
@@ -63,6 +66,9 @@
         <div class="section-heading">
           <p class="eyebrow">Campanhas ativas</p>
           <h2>Ajuda direcionada para quem está cuidando</h2>
+          <button class="primary-button small-button" id="newCampaignButton" type="button" hidden>
+            + Abrir campanha
+          </button>
         </div>
         <div class="card-grid" id="campaignGrid"></div>
       </section>
@@ -189,15 +195,73 @@
     </dialog>
 
     <dialog class="modal" id="loginModal">
-      <form method="dialog" class="modal-box" id="loginForm">
+      <div class="modal-box">
         <button class="icon-button close-button" type="button" data-close="loginModal" aria-label="Fechar">×</button>
         <h3>Entrar no PetConnect</h3>
+        <div class="tab-row" role="tablist">
+          <button class="tab active" type="button" role="tab" data-login-tab="visitor">Sou visitante</button>
+          <button class="tab" type="button" role="tab" data-login-tab="ngo">Sou uma ONG</button>
+        </div>
+        <form id="visitorLoginForm" data-login-panel="visitor">
+          <p class="form-hint">Entre com seu nome para apoiar campanhas e enviar denúncias.</p>
+          <label>
+            Nome de exibição
+            <input name="name" type="text" value="Visitante solidário" maxlength="80" required />
+          </label>
+          <button class="primary-button full-button" type="submit">Entrar como visitante</button>
+        </form>
+        <form id="ngoLoginForm" data-login-panel="ngo" hidden>
+          <p class="form-hint">Acesso para ONGs cadastradas. Após entrar, você pode abrir campanhas.</p>
+          <label>
+            Email da ONG
+            <input name="email" type="email" autocomplete="username" required />
+          </label>
+          <label>
+            Senha
+            <input name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <p class="form-error" id="ngoLoginError" hidden></p>
+          <button class="primary-button full-button" type="submit">Entrar como ONG</button>
+        </form>
+      </div>
+    </dialog>
+
+    <dialog class="modal" id="campaignModal">
+      <form method="dialog" class="modal-box" id="campaignForm">
+        <button class="icon-button close-button" type="button" data-close="campaignModal" aria-label="Fechar">×</button>
+        <h3>Abrir nova campanha</h3>
         <label>
-          Nome de exibição
-          <input name="name" type="text" value="Visitante solidário" required />
+          Título
+          <input name="title" type="text" maxlength="120" required />
         </label>
-        <button class="primary-button full-button" value="default" type="submit">Entrar</button>
+        <label>
+          Resumo
+          <input name="description" type="text" maxlength="240" placeholder="Uma frase sobre o objetivo" required />
+        </label>
+        <label>
+          Detalhes
+          <textarea name="details" rows="5" maxlength="4000" placeholder="Conte como os recursos serão usados"></textarea>
+        </label>
+        <div class="form-row">
+          <label>
+            Meta em R$
+            <input name="target" type="number" min="1" step="1" value="1000" required />
+          </label>
+          <label>
+            Imagem (link, opcional)
+            <input name="imageUrl" type="url" placeholder="https://..." />
+          </label>
+        </div>
+        <p class="form-error" id="campaignError" hidden></p>
+        <button class="primary-button full-button" value="default" type="submit">Publicar campanha</button>
       </form>
+    </dialog>
+
+    <dialog class="modal modal-wide" id="campaignDetailModal">
+      <div class="modal-box detail-box" id="campaignDetail">
+        <button class="icon-button close-button" type="button" data-close="campaignDetailModal" aria-label="Fechar">×</button>
+        <div id="campaignDetailContent"></div>
+      </div>
     </dialog>
 
     <div class="toast-stack" id="toastStack" aria-live="polite"></div>

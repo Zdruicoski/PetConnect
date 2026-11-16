@@ -356,6 +356,7 @@ h3 {
 
 .map-panel {
   position: relative;
+  z-index: 0; /* contém o z-index alto das camadas do Leaflet abaixo do cabeçalho fixo */
 }
 
 .map-canvas {
@@ -636,5 +637,234 @@ select:focus {
   .card-grid,
   .report-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Login, campanhas e detalhes */
+[hidden] {
+  display: none !important;
+}
+
+.session-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.session-name {
+  display: block;
+  max-width: 240px;
+  line-height: 38px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.section-heading .small-button {
+  margin-top: 6px;
+}
+
+.tab-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin: 14px 0 18px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--soft);
+}
+
+.tab {
+  min-height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.tab.active {
+  background: #ffffff;
+  color: var(--brand-dark);
+  box-shadow: 0 2px 8px rgba(23, 32, 51, 0.1);
+}
+
+.form-hint {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.form-error {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fdecec;
+  color: #b42318;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+#campaignForm .form-row {
+  grid-template-columns: 1fr 1fr;
+}
+
+.card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.card-image.clickable {
+  cursor: pointer;
+}
+
+.modal-wide {
+  max-width: min(720px, calc(100vw - 28px));
+}
+
+.modal-wide .modal-box {
+  min-width: min(680px, calc(100vw - 28px));
+}
+
+.detail-box {
+  max-height: calc(100vh - 48px);
+  padding: 0 0 22px;
+  overflow-y: auto;
+}
+
+.detail-box > div {
+  display: grid;
+  gap: 4px;
+}
+
+.detail-box .close-button {
+  z-index: 2;
+}
+
+.detail-image {
+  width: 100%;
+  height: 260px;
+  margin-bottom: 18px;
+  object-fit: cover;
+  border-radius: 8px 8px 0 0;
+}
+
+.detail-box > div > :not(.detail-image) {
+  margin-left: 24px;
+  margin-right: 24px;
+}
+
+.detail-box .full-button {
+  width: auto;
+}
+
+.detail-box h3 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.detail-box h4 {
+  margin: 20px 24px 6px;
+}
+
+.detail-summary {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.detail-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+.detail-stats dt {
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.detail-stats dd {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.detail-text p {
+  margin: 0 0 10px;
+}
+
+.detail-ngo {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.detail-ngo img {
+  flex: 0 0 72px;
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.detail-ngo span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.detail-ngo p {
+  margin: 4px 0 0;
+  font-size: 0.92rem;
+}
+
+.donation-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 0;
+  margin-bottom: 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.donation-list li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--soft);
+  font-size: 0.92rem;
+}
+
+.donation-list small {
+  color: var(--muted);
+}
+
+.donation-list .empty {
+  grid-template-columns: 1fr;
+  color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .detail-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .detail-image {
+    height: 200px;
+  }
+
+  #campaignForm .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .session-name {
+    max-width: 130px;
   }
 }

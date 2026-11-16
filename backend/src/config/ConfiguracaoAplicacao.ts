@@ -16,8 +16,8 @@ export type ConfiguracaoMapa = {
 export class ConfiguracaoAplicacao {
   pastaRaiz: string;
   pastaFrontend: string;
-  pastaDados: string;
-  arquivoDados: string;
+  arquivoEsquema: string;
+  urlBanco: string;
   porta: number;
   mapa: ConfiguracaoMapa;
 
@@ -26,8 +26,8 @@ export class ConfiguracaoAplicacao {
 
     this.pastaRaiz = pastaRaiz;
     this.pastaFrontend = path.join(pastaRaiz, "frontend");
-    this.pastaDados = path.join(pastaRaiz, "data");
-    this.arquivoDados = path.join(this.pastaDados, "store.json");
+    this.arquivoEsquema = path.join(pastaRaiz, "db", "schema.sql");
+    this.urlBanco = process.env.DATABASE_URL || variaveisAmbiente.DATABASE_URL || "";
     this.porta = Number(process.env.PORT || variaveisAmbiente.PORT || 3000);
     this.mapa = {
       provedor: "leaflet-openstreetmap",

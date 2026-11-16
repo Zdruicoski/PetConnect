@@ -1,14 +1,14 @@
 import type { Ong } from "../entity/Ong";
-import type { RepositorioJson } from "../repositories/RepositorioJson";
+import type { RepositorioPostgres } from "../repositories/RepositorioPostgres";
 
 export class ServicoOngs {
-  repositorio: RepositorioJson;
+  repositorio: RepositorioPostgres;
 
-  constructor(repositorio: RepositorioJson) {
+  constructor(repositorio: RepositorioPostgres) {
     this.repositorio = repositorio;
   }
 
-  listarOngs(): Ong[] {
-    return this.repositorio.buscarTodos().ngos;
+  listarOngs(): Promise<Ong[]> {
+    return this.repositorio.listarOngs();
   }
 }

@@ -2,28 +2,26 @@ import {
   CandidaturaVoluntario,
   type DadosCandidaturaVoluntario
 } from "../entity/CandidaturaVoluntario";
-import type { RepositorioJson } from "../repositories/RepositorioJson";
+import type { RepositorioPostgres } from "../repositories/RepositorioPostgres";
 import type { ServicoNotificacoes } from "./ServicoNotificacoes";
 
 export class ServicoVoluntariado {
-  repositorio: RepositorioJson;
+  repositorio: RepositorioPostgres;
   notificacoes: ServicoNotificacoes;
 
-  constructor(repositorio: RepositorioJson, notificacoes: ServicoNotificacoes) {
+  constructor(repositorio: RepositorioPostgres, notificacoes: ServicoNotificacoes) {
     this.repositorio = repositorio;
     this.notificacoes = notificacoes;
   }
 
-  listarCandidaturas(): CandidaturaVoluntario[] {
-    return this.repositorio.buscarTodos().volunteerApplications;
+  listarCandidaturas(): Promise<CandidaturaVoluntario[]> {
+    return this.repositorio.listarCandidaturas();
   }
 
-  criarCandidatura(dados: DadosCandidaturaVoluntario): CandidaturaVoluntario {
+  async criarCandidatura(dados: DadosCandidaturaVoluntario): Promise<CandidaturaVoluntario> {
     const candidatura = CandidaturaVoluntario.criar(dados);
 
-    this.repositorio.atualizar((dadosAplicacao) => {
-      dadosAplicacao.volunteerApplications.unshift(candidatura);
-    });
+    await this.repositorio.inserirCandidatura(candidatura);
 
     this.notificacoes.notificarTodos("volunteer-created", {
       application: candidatura,

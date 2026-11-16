@@ -10,13 +10,13 @@ export class ControladorVoluntariado {
     this.servico = servico;
   }
 
-  listar(contexto: ContextoRequisicao): void {
-    RespostaHttp.json(contexto.resposta, 200, this.servico.listarCandidaturas());
+  async listar(contexto: ContextoRequisicao): Promise<void> {
+    RespostaHttp.json(contexto.resposta, 200, await this.servico.listarCandidaturas());
   }
 
   async criar(contexto: ContextoRequisicao): Promise<void> {
     const dados = await CorpoRequisicao.lerJson(contexto.requisicao);
-    const candidatura = this.servico.criarCandidatura(dados);
+    const candidatura = await this.servico.criarCandidatura(dados);
     RespostaHttp.json(contexto.resposta, 201, candidatura);
   }
 }

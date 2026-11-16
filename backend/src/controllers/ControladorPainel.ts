@@ -9,7 +9,7 @@ export class ControladorPainel {
     this.servico = servico;
   }
 
-  listar(contexto: ContextoRequisicao): void {
-    RespostaHttp.json(contexto.resposta, 200, this.servico.obterPainel());
+  async listar(contexto: ContextoRequisicao): Promise<void> {
+    RespostaHttp.json(contexto.resposta, 200, await this.servico.obterPainel());
   }
 }

@@ -49,7 +49,7 @@ export class ServidorAplicacao {
 
       if (!rotaAtendida) {
         const url = new URL(requisicao.url || "/", `http://${requisicao.headers.host || "localhost"}`);
-        this.controladorArquivosEstaticos.servir({ requisicao, resposta, url });
+        this.controladorArquivosEstaticos.servir({ requisicao, resposta, url, parametros: {} });
       }
     } catch (erro) {
       this.tratarErro(resposta, erro);

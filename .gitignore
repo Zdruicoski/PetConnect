@@ -4,3 +4,4 @@ backend/dist/
 .env
 data/*.tmp
 *.log
+.claude/

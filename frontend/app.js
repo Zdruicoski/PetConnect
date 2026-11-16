@@ -10,7 +10,8 @@ const estado = {
   selectedMarker: null,
   reportMarkers: [],
   fallbackMarkers: [],
-  user: JSON.parse(localStorage.getItem("petconnect:user") || "null")
+  user: null,
+  token: lerArmazenamento("petconnect:token")
 };
 
 const elementos = {};
@@ -18,7 +19,7 @@ const elementos = {};
 document.addEventListener("DOMContentLoaded", async () => {
   vincularElementos();
   vincularEventosInterface();
-  atualizarBotaoLogin();
+  await restaurarSessao();
   await carregarPainel();
   await carregarMapa();
   conectarEventos();
@@ -41,25 +42,38 @@ function vincularElementos() {
   elementos.moneyField = document.querySelector("#moneyField");
   elementos.foodField = document.querySelector("#foodField");
   elementos.loginModal = document.querySelector("#loginModal");
-  elementos.loginForm = document.querySelector("#loginForm");
   elementos.loginButton = document.querySelector("#loginButton");
+  elementos.logoutButton = document.querySelector("#logoutButton");
+  elementos.visitorLoginForm = document.querySelector("#visitorLoginForm");
+  elementos.ngoLoginForm = document.querySelector("#ngoLoginForm");
+  elementos.ngoLoginError = document.querySelector("#ngoLoginError");
+  elementos.newCampaignButton = document.querySelector("#newCampaignButton");
+  elementos.campaignModal = document.querySelector("#campaignModal");
+  elementos.campaignForm = document.querySelector("#campaignForm");
+  elementos.campaignError = document.querySelector("#campaignError");
+  elementos.campaignDetailModal = document.querySelector("#campaignDetailModal");
+  elementos.campaignDetailContent = document.querySelector("#campaignDetailContent");
   elementos.volunteerForm = document.querySelector("#volunteerForm");
   elementos.toastStack = document.querySelector("#toastStack");
 }
 
 function vincularEventosInterface() {
   elementos.loginButton.addEventListener("click", () => {
-    elementos.loginModal.showModal();
+    if (!estado.user) {
+      elementos.loginModal.showModal();
+    }
   });
+  elementos.logoutButton.addEventListener("click", sair);
+  elementos.visitorLoginForm.addEventListener("submit", entrarComoVisitante);
+  elementos.ngoLoginForm.addEventListener("submit", entrarComoOng);
+  elementos.newCampaignButton.addEventListener("click", () => {
+    elementos.campaignError.hidden = true;
+    elementos.campaignModal.showModal();
+  });
+  elementos.campaignForm.addEventListener("submit", abrirCampanha);
 
-  elementos.loginForm.addEventListener("submit", (evento) => {
-    evento.preventDefault();
-    const formulario = new FormData(elementos.loginForm);
-    estado.user = { name: formulario.get("name") || "Visitante solidário" };
-    localStorage.setItem("petconnect:user", JSON.stringify(estado.user));
-    atualizarBotaoLogin();
-    elementos.loginModal.close();
-    exibirAlerta(`Olá, ${estado.user.name}. Alertas ativados.`);
+  document.querySelectorAll("[data-login-tab]").forEach((aba) => {
+    aba.addEventListener("click", () => selecionarAbaLogin(aba.dataset.loginTab));
   });
 
   elementos.reportForm.addEventListener("submit", enviarDenuncia);
@@ -213,7 +227,7 @@ function renderizarCampanhas() {
       const porcentagem = Math.min(Math.round((campanha.raised / campanha.target) * 100), 100);
       return `
         <article class="campaign-card">
-          <img class="card-image" src="${campanha.imageUrl}" alt="${escaparHtml(campanha.title)}" />
+          <img class="card-image clickable" src="${escaparHtml(campanha.imageUrl)}" alt="${escaparHtml(campanha.title)}" data-details="${campanha.id}" />
           <div class="card-body">
             <h3>${escaparHtml(campanha.title)}</h3>
             <p>${escaparHtml(campanha.description)}</p>
@@ -228,9 +242,14 @@ function renderizarCampanhas() {
               <span>${campanha.supporters} apoiadores</span>
               <span>Meta R$ ${formatarMoeda(campanha.target)}</span>
             </div>
-            <button class="primary-button full-button" type="button" data-donate="${campanha.id}">
-              Apoiar
-            </button>
+            <div class="card-actions">
+              <button class="ghost-button" type="button" data-details="${campanha.id}">
+                Ver detalhes
+              </button>
+              <button class="primary-button" type="button" data-donate="${campanha.id}">
+                Apoiar
+              </button>
+            </div>
           </div>
         </article>
       `;
@@ -239,6 +258,9 @@ function renderizarCampanhas() {
 
   document.querySelectorAll("[data-donate]").forEach((botao) => {
     botao.addEventListener("click", () => abrirModalDoacao(botao.dataset.donate));
+  });
+  document.querySelectorAll("[data-details]").forEach((elemento) => {
+    elemento.addEventListener("click", () => abrirDetalhesCampanha(elemento.dataset.details));
   });
 }
 
@@ -478,6 +500,12 @@ function conectarEventos() {
     exibirAlerta(conteudo.message);
   });
 
+  fluxo.addEventListener("campaign-created", (evento) => {
+    const conteudo = JSON.parse(evento.data);
+    adicionarCampanha(conteudo.campaign);
+    exibirAlerta(conteudo.message);
+  });
+
   fluxo.addEventListener("volunteer-created", (evento) => {
     const conteudo = JSON.parse(evento.data);
     exibirAlerta(conteudo.message);
@@ -490,11 +518,12 @@ function conectarEventos() {
 
 async function buscarJson(url, opcoes = {}) {
   const resposta = await fetch(url, {
+    ...opcoes,
     headers: {
       "Content-Type": "application/json",
+      ...(estado.token ? { Authorization: `Bearer ${estado.token}` } : {}),
       ...(opcoes.headers || {})
-    },
-    ...opcoes
+    }
   });
 
   const dados = await resposta.json();
@@ -506,7 +535,233 @@ async function buscarJson(url, opcoes = {}) {
 }
 
 function atualizarBotaoLogin() {
-  elementos.loginButton.textContent = estado.user ? estado.user.name : "Entrar";
+  const ehOng = estado.user?.type === "ong";
+  elementos.loginButton.textContent = estado.user
+    ? `${ehOng ? "ONG: " : ""}${estado.user.name}`
+    : "Entrar";
+  elementos.loginButton.classList.toggle("session-name", Boolean(estado.user));
+  elementos.logoutButton.hidden = !estado.user;
+  elementos.newCampaignButton.hidden = !ehOng;
+}
+
+function lerArmazenamento(chave) {
+  try {
+    return localStorage.getItem(chave);
+  } catch {
+    return null;
+  }
+}
+
+function salvarSessao(token) {
+  estado.token = token;
+  try {
+    if (token) {
+      localStorage.setItem("petconnect:token", token);
+    } else {
+      localStorage.removeItem("petconnect:token");
+    }
+  } catch {
+    // Sem armazenamento local a sessão dura apenas até recarregar a página.
+  }
+}
+
+async function restaurarSessao() {
+  if (estado.token) {
+    try {
+      estado.user = (await buscarJson("/api/auth/me")).user;
+    } catch {
+      salvarSessao(null);
+    }
+  }
+
+  atualizarBotaoLogin();
+}
+
+function selecionarAbaLogin(aba) {
+  document.querySelectorAll("[data-login-tab]").forEach((botao) => {
+    botao.classList.toggle("active", botao.dataset.loginTab === aba);
+  });
+  document.querySelectorAll("[data-login-panel]").forEach((painel) => {
+    painel.hidden = painel.dataset.loginPanel !== aba;
+  });
+}
+
+function concluirLogin(resultado) {
+  salvarSessao(resultado.token);
+  estado.user = resultado.user;
+  atualizarBotaoLogin();
+  elementos.loginModal.close();
+  exibirAlerta(
+    resultado.user.type === "ong"
+      ? `Olá, ${resultado.user.name}. Você já pode abrir campanhas.`
+      : `Olá, ${resultado.user.name}. Alertas ativados.`
+  );
+}
+
+async function entrarComoVisitante(evento) {
+  evento.preventDefault();
+  const formulario = new FormData(elementos.visitorLoginForm);
+
+  try {
+    concluirLogin(
+      await buscarJson("/api/auth/visitor", {
+        method: "POST",
+        body: JSON.stringify({ name: formulario.get("name") })
+      })
+    );
+  } catch (erro) {
+    exibirAlerta(erro.message);
+  }
+}
+
+async function entrarComoOng(evento) {
+  evento.preventDefault();
+  const formulario = new FormData(elementos.ngoLoginForm);
+  elementos.ngoLoginError.hidden = true;
+
+  try {
+    concluirLogin(
+      await buscarJson("/api/auth/ngo", {
+        method: "POST",
+        body: JSON.stringify({
+          email: formulario.get("email"),
+          password: formulario.get("password")
+        })
+      })
+    );
+    elementos.ngoLoginForm.reset();
+  } catch (erro) {
+    elementos.ngoLoginError.textContent = erro.message;
+    elementos.ngoLoginError.hidden = false;
+  }
+}
+
+async function sair() {
+  try {
+    await buscarJson("/api/auth/logout", { method: "POST" });
+  } catch {
+    // Mesmo sem resposta do servidor a sessão local é encerrada.
+  }
+
+  salvarSessao(null);
+  estado.user = null;
+  atualizarBotaoLogin();
+  exibirAlerta("Você saiu da sua conta.");
+}
+
+async function abrirCampanha(evento) {
+  evento.preventDefault();
+  const formulario = new FormData(elementos.campaignForm);
+  elementos.campaignError.hidden = true;
+
+  try {
+    const campanha = await buscarJson("/api/campaigns", {
+      method: "POST",
+      body: JSON.stringify({
+        title: formulario.get("title"),
+        description: formulario.get("description"),
+        details: formulario.get("details"),
+        target: Number(formulario.get("target")),
+        imageUrl: formulario.get("imageUrl")
+      })
+    });
+
+    adicionarCampanha(campanha);
+    elementos.campaignForm.reset();
+    elementos.campaignModal.close();
+    exibirAlerta("Campanha publicada.");
+    abrirDetalhesCampanha(campanha.id);
+  } catch (erro) {
+    elementos.campaignError.textContent = erro.message;
+    elementos.campaignError.hidden = false;
+  }
+}
+
+function adicionarCampanha(campanha) {
+  if (estado.campaigns.some((item) => item.id === campanha.id)) {
+    return;
+  }
+
+  estado.campaigns.unshift(campanha);
+  const ong = estado.ngos.find((item) => item.id === campanha.ngoId);
+  if (ong) {
+    ong.activeCampaigns += 1;
+  }
+  renderizarCampanhas();
+  renderizarOngs();
+}
+
+async function abrirDetalhesCampanha(campaignId) {
+  try {
+    const detalhe = await buscarJson(`/api/campaigns/${encodeURIComponent(campaignId)}`);
+    renderizarDetalhesCampanha(detalhe);
+    if (!elementos.campaignDetailModal.open) {
+      elementos.campaignDetailModal.showModal();
+    }
+  } catch (erro) {
+    exibirAlerta(erro.message);
+  }
+}
+
+function renderizarDetalhesCampanha({ campaign, ngo, recentDonations }) {
+  const porcentagem = Math.min(Math.round((campaign.raised / campaign.target) * 100), 100);
+  const paragrafos = (campaign.details || campaign.description)
+    .split(/\n{2,}/)
+    .map((texto) => `<p>${escaparHtml(texto).replaceAll("\n", "<br />")}</p>`)
+    .join("");
+  const doacoes = recentDonations.length
+    ? recentDonations
+        .map(
+          (doacao) => `
+            <li>
+              <span>${escaparHtml(doacao.donorName)}</span>
+              <strong>${
+                doacao.type === "money"
+                  ? `R$ ${formatarMoeda(doacao.amount)}`
+                  : escaparHtml(doacao.foodDescription || "Doação de alimento")
+              }</strong>
+              <small>${tempoDecorrido(doacao.createdAt)}</small>
+            </li>`
+        )
+        .join("")
+    : '<li class="empty">Ainda não há apoios registrados. Seja o primeiro!</li>';
+
+  elementos.campaignDetailContent.innerHTML = `
+    <img class="detail-image" src="${escaparHtml(campaign.imageUrl)}" alt="${escaparHtml(campaign.title)}" />
+    <span class="eyebrow">Campanha de ${escaparHtml(campaign.ngoName)}</span>
+    <h3>${escaparHtml(campaign.title)}</h3>
+    <p class="detail-summary">${escaparHtml(campaign.description)}</p>
+    <div class="progress-track" aria-label="Progresso da campanha">
+      <div class="progress-fill" style="width: ${porcentagem}%"></div>
+    </div>
+    <dl class="detail-stats">
+      <div><dt>R$ ${formatarMoeda(campaign.raised)}</dt><dd>arrecadados (${porcentagem}%)</dd></div>
+      <div><dt>R$ ${formatarMoeda(campaign.target)}</dt><dd>meta</dd></div>
+      <div><dt>${campaign.supporters}</dt><dd>apoiadores</dd></div>
+      <div><dt>${campaign.donations}</dt><dd>doações</dd></div>
+    </dl>
+    <h4>Sobre a campanha</h4>
+    <div class="detail-text">${paragrafos}</div>
+    <h4>Quem está cuidando</h4>
+    <div class="detail-ngo">
+      <img src="${escaparHtml(ngo.imageUrl)}" alt="" />
+      <div>
+        <strong>${escaparHtml(ngo.name)}</strong>
+        <span>${escaparHtml(ngo.city)}</span>
+        <p>${escaparHtml(ngo.about)}</p>
+      </div>
+    </div>
+    <h4>Apoios recentes</h4>
+    <ul class="donation-list">${doacoes}</ul>
+    <button class="primary-button full-button" type="button" id="detailDonateButton">
+      Apoiar esta campanha
+    </button>
+  `;
+
+  document.querySelector("#detailDonateButton").addEventListener("click", () => {
+    elementos.campaignDetailModal.close();
+    abrirModalDoacao(campaign.id);
+  });
 }
 
 function exibirAlerta(mensagem) {
