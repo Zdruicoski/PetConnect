@@ -10,13 +10,13 @@ export class ControladorDoacoes {
     this.servico = servico;
   }
 
-  listar(contexto: ContextoRequisicao): void {
-    RespostaHttp.json(contexto.resposta, 200, this.servico.listarDoacoes());
+  async listar(contexto: ContextoRequisicao): Promise<void> {
+    RespostaHttp.json(contexto.resposta, 200, await this.servico.listarDoacoes());
   }
 
   async criar(contexto: ContextoRequisicao): Promise<void> {
     const dados = await CorpoRequisicao.lerJson(contexto.requisicao);
-    const resultado = this.servico.criarDoacao(dados);
+    const resultado = await this.servico.criarDoacao(dados);
     RespostaHttp.json(contexto.resposta, 201, resultado);
   }
 }

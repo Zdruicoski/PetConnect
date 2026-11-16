@@ -1,26 +1,24 @@
 import { Denuncia, type DadosDenuncia } from "../entity/Denuncia";
-import type { RepositorioJson } from "../repositories/RepositorioJson";
+import type { RepositorioPostgres } from "../repositories/RepositorioPostgres";
 import type { ServicoNotificacoes } from "./ServicoNotificacoes";
 
 export class ServicoDenuncias {
-  repositorio: RepositorioJson;
+  repositorio: RepositorioPostgres;
   notificacoes: ServicoNotificacoes;
 
-  constructor(repositorio: RepositorioJson, notificacoes: ServicoNotificacoes) {
+  constructor(repositorio: RepositorioPostgres, notificacoes: ServicoNotificacoes) {
     this.repositorio = repositorio;
     this.notificacoes = notificacoes;
   }
 
-  listarDenuncias(): Denuncia[] {
-    return this.repositorio.buscarTodos().reports;
+  listarDenuncias(): Promise<Denuncia[]> {
+    return this.repositorio.listarDenuncias();
   }
 
-  criarDenuncia(dados: DadosDenuncia): Denuncia {
+  async criarDenuncia(dados: DadosDenuncia): Promise<Denuncia> {
     const denuncia = Denuncia.criar(dados);
 
-    this.repositorio.atualizar((dadosAplicacao) => {
-      dadosAplicacao.reports.unshift(denuncia);
-    });
+    await this.repositorio.inserirDenuncia(denuncia);
 
     this.notificacoes.notificarTodos("report-created", {
       report: denuncia,

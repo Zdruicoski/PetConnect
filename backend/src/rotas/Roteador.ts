@@ -23,15 +23,38 @@ export class Roteador {
 
   async atender(requisicao: IncomingMessage, resposta: ServerResponse): Promise<boolean> {
     const url = new URL(requisicao.url || "/", `http://${requisicao.headers.host || "localhost"}`);
-    const rota = this.rotas.find(
-      (item) => item.metodo === requisicao.method && item.caminho === url.pathname
-    );
 
-    if (!rota) {
-      return false;
+    for (const rota of this.rotas) {
+      const parametros = rota.metodo === requisicao.method ? this.casar(rota.caminho, url.pathname) : null;
+
+      if (parametros) {
+        await rota.manipulador({ requisicao, resposta, url, parametros });
+        return true;
+      }
     }
 
-    await rota.manipulador({ requisicao, resposta, url });
-    return true;
+    return false;
+  }
+
+  // Aceita segmentos dinâmicos no formato "/api/campaigns/:id".
+  private casar(padrao: string, caminho: string): Record<string, string> | null {
+    const segmentosPadrao = padrao.split("/");
+    const segmentosCaminho = caminho.split("/");
+
+    if (segmentosPadrao.length !== segmentosCaminho.length) {
+      return null;
+    }
+
+    const parametros: Record<string, string> = {};
+
+    for (const [indice, segmento] of segmentosPadrao.entries()) {
+      if (segmento.startsWith(":")) {
+        parametros[segmento.slice(1)] = decodeURIComponent(segmentosCaminho[indice]);
+      } else if (segmento !== segmentosCaminho[indice]) {
+        return null;
+      }
+    }
+
+    return parametros;
   }
 }

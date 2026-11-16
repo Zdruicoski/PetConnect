@@ -1,3 +1,4 @@
+import type { ControladorAutenticacao } from "../controllers/ControladorAutenticacao";
 import type { ControladorCampanhas } from "../controllers/ControladorCampanhas";
 import type { ControladorConfiguracao } from "../controllers/ControladorConfiguracao";
 import type { ControladorDenuncias } from "../controllers/ControladorDenuncias";
@@ -13,6 +14,7 @@ export type RegistroControladores = {
   controladorStatus: ControladorStatus;
   controladorConfiguracao: ControladorConfiguracao;
   controladorPainel: ControladorPainel;
+  controladorAutenticacao: ControladorAutenticacao;
   controladorCampanhas: ControladorCampanhas;
   controladorOngs: ControladorOngs;
   controladorEventos: ControladorEventos;
@@ -25,7 +27,21 @@ export function registrarRotas(roteador: Roteador, controladores: RegistroContro
   roteador.get("/api/health", (contexto) => controladores.controladorStatus.mostrar(contexto));
   roteador.get("/api/config", (contexto) => controladores.controladorConfiguracao.mostrar(contexto));
   roteador.get("/api/dashboard", (contexto) => controladores.controladorPainel.listar(contexto));
+  roteador.post("/api/auth/visitor", (contexto) =>
+    controladores.controladorAutenticacao.entrarComoVisitante(contexto)
+  );
+  roteador.post("/api/auth/ngo", (contexto) =>
+    controladores.controladorAutenticacao.entrarComoOng(contexto)
+  );
+  roteador.get("/api/auth/me", (contexto) =>
+    controladores.controladorAutenticacao.mostrarUsuario(contexto)
+  );
+  roteador.post("/api/auth/logout", (contexto) => controladores.controladorAutenticacao.sair(contexto));
   roteador.get("/api/campaigns", (contexto) => controladores.controladorCampanhas.listar(contexto));
+  roteador.post("/api/campaigns", (contexto) => controladores.controladorCampanhas.criar(contexto));
+  roteador.get("/api/campaigns/:id", (contexto) =>
+    controladores.controladorCampanhas.detalhar(contexto)
+  );
   roteador.get("/api/ngos", (contexto) => controladores.controladorOngs.listar(contexto));
   roteador.get("/api/events", (contexto) => controladores.controladorEventos.transmitir(contexto));
   roteador.get("/api/reports", (contexto) => controladores.controladorDenuncias.listar(contexto));

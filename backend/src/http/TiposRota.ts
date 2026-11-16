@@ -6,6 +6,7 @@ export type ContextoRequisicao = {
   requisicao: IncomingMessage;
   resposta: ServerResponse;
   url: URL;
+  parametros: Record<string, string>;
 };
 
 export type ManipuladorRota = (contexto: ContextoRequisicao) => Promise<void> | void;

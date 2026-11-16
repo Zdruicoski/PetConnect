@@ -9,7 +9,7 @@ export class ControladorOngs {
     this.servico = servico;
   }
 
-  listar(contexto: ContextoRequisicao): void {
-    RespostaHttp.json(contexto.resposta, 200, this.servico.listarOngs());
+  async listar(contexto: ContextoRequisicao): Promise<void> {
+    RespostaHttp.json(contexto.resposta, 200, await this.servico.listarOngs());
   }
 }

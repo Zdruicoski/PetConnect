@@ -10,13 +10,13 @@ export class ControladorDenuncias {
     this.servico = servico;
   }
 
-  listar(contexto: ContextoRequisicao): void {
-    RespostaHttp.json(contexto.resposta, 200, this.servico.listarDenuncias());
+  async listar(contexto: ContextoRequisicao): Promise<void> {
+    RespostaHttp.json(contexto.resposta, 200, await this.servico.listarDenuncias());
   }
 
   async criar(contexto: ContextoRequisicao): Promise<void> {
     const dados = await CorpoRequisicao.lerJson(contexto.requisicao);
-    const denuncia = this.servico.criarDenuncia(dados);
+    const denuncia = await this.servico.criarDenuncia(dados);
     RespostaHttp.json(contexto.resposta, 201, denuncia);
   }
 }
