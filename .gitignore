@@ -5,3 +5,4 @@ backend/dist/
 data/*.tmp
 *.log
 .claude/
+.idea/
