@@ -1,22 +1,13 @@
 import * as path from "path";
 
 import { criarAplicacao } from "./app";
-import { ConfiguracaoAplicacao } from "./config/ConfiguracaoAplicacao";
-import { Banco } from "./repositories/Banco";
+import { Configuracao } from "./Configuracao";
 
 async function iniciar(): Promise<void> {
   const pastaRaiz = path.resolve(__dirname, "..", "..");
-  const configuracao = new ConfiguracaoAplicacao(pastaRaiz);
+  const configuracao = new Configuracao(pastaRaiz);
+  const servidor = await criarAplicacao(configuracao);
 
-  if (!configuracao.urlBanco) {
-    console.error(
-      "DATABASE_URL não definida. Copie .env.example para .env e informe a conexão com o PostgreSQL."
-    );
-    process.exit(1);
-  }
-
-  const banco = await Banco.conectar(configuracao.urlBanco);
-  const servidor = await criarAplicacao(configuracao, banco);
   servidor.iniciar();
 }
 

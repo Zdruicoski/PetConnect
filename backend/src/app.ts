@@ -1,65 +1,80 @@
-import { ConfiguracaoAplicacao } from "./config/ConfiguracaoAplicacao";
-import { ControladorArquivosEstaticos } from "./controllers/ControladorArquivosEstaticos";
-import { ControladorAutenticacao } from "./controllers/ControladorAutenticacao";
-import { ControladorCampanhas } from "./controllers/ControladorCampanhas";
-import { ControladorConfiguracao } from "./controllers/ControladorConfiguracao";
-import { ControladorDenuncias } from "./controllers/ControladorDenuncias";
-import { ControladorDoacoes } from "./controllers/ControladorDoacoes";
-import { ControladorEventos } from "./controllers/ControladorEventos";
-import { ControladorOngs } from "./controllers/ControladorOngs";
-import { ControladorPainel } from "./controllers/ControladorPainel";
-import { ControladorStatus } from "./controllers/ControladorStatus";
-import { ControladorVoluntariado } from "./controllers/ControladorVoluntariado";
-import { ServidorAplicacao } from "./http/ServidorAplicacao";
-import type { Banco } from "./repositories/Banco";
-import { RepositorioPostgres } from "./repositories/RepositorioPostgres";
-import { Semeador } from "./repositories/Semeador";
-import { registrarRotas } from "./rotas/registrarRotas";
-import { Roteador } from "./rotas/Roteador";
-import { ServicoAutenticacao } from "./services/ServicoAutenticacao";
-import { ServicoCampanhas } from "./services/ServicoCampanhas";
-import { ServicoConfiguracao } from "./services/ServicoConfiguracao";
-import { ServicoDenuncias } from "./services/ServicoDenuncias";
-import { ServicoDoacoes } from "./services/ServicoDoacoes";
-import { ServicoNotificacoes } from "./services/ServicoNotificacoes";
-import { ServicoOngs } from "./services/ServicoOngs";
-import { ServicoPainel } from "./services/ServicoPainel";
-import { ServicoVoluntariado } from "./services/ServicoVoluntariado";
+import { Configuracao } from "./Configuracao";
+import { ArquivosEstaticosController } from "./controller/ArquivosEstaticosController";
+import { AutenticacaoController } from "./controller/AutenticacaoController";
+import { CatalogoController } from "./controller/CatalogoController";
+import { ComunidadeController } from "./controller/ComunidadeController";
+import { EventosController } from "./controller/EventosController";
+import { SistemaController } from "./controller/SistemaController";
+import { Banco } from "./repository/Banco";
+import { CatalogoRepository } from "./repository/CatalogoRepository";
+import { ComunidadeRepository } from "./repository/ComunidadeRepository";
+import { Semeador } from "./repository/Semeador";
+import { UsuarioRepository } from "./repository/UsuarioRepository";
+import { Roteador, ServidorAplicacao } from "./Servidor";
+import { AutenticacaoService } from "./service/AutenticacaoService";
+import { CatalogoService } from "./service/CatalogoService";
+import { ComunidadeService } from "./service/ComunidadeService";
+import { NotificacaoService } from "./service/NotificacaoService";
 
-export async function criarAplicacao(
-  configuracao: ConfiguracaoAplicacao,
-  banco: Banco
-): Promise<ServidorAplicacao> {
-  await banco.aplicarEsquema(configuracao.arquivoEsquema);
+export async function criarAplicacao(configuracao: Configuracao): Promise<ServidorAplicacao> {
+  const banco = await Banco.conectar(configuracao.urlBanco);
+  await banco.aplicarEsquema();
 
-  const repositorio = new RepositorioPostgres(banco);
-  await new Semeador(repositorio).semearSeVazio();
+  const catalogoRepository = new CatalogoRepository(banco);
+  const comunidadeRepository = new ComunidadeRepository(banco);
+  const usuarioRepository = new UsuarioRepository(banco);
 
-  const notificacoes = new ServicoNotificacoes();
-  const autenticacao = new ServicoAutenticacao(repositorio);
+  await new Semeador(
+    banco,
+    catalogoRepository,
+    comunidadeRepository,
+    usuarioRepository
+  ).semear();
+
+  const notificacoes = new NotificacaoService();
+  const autenticacao = new AutenticacaoService(usuarioRepository);
+  const catalogo = new CatalogoService(catalogoRepository, comunidadeRepository, notificacoes);
+  const comunidade = new ComunidadeService(comunidadeRepository, notificacoes);
+
   const roteador = new Roteador();
+  const sistemaController = new SistemaController(configuracao);
+  const catalogoController = new CatalogoController(catalogo, autenticacao);
+  const comunidadeController = new ComunidadeController(comunidade);
+  const autenticacaoController = new AutenticacaoController(autenticacao);
+  const eventosController = new EventosController(notificacoes);
 
-  registrarRotas(roteador, {
-    controladorStatus: new ControladorStatus(),
-    controladorConfiguracao: new ControladorConfiguracao(new ServicoConfiguracao(configuracao)),
-    controladorPainel: new ControladorPainel(new ServicoPainel(repositorio)),
-    controladorAutenticacao: new ControladorAutenticacao(autenticacao),
-    controladorCampanhas: new ControladorCampanhas(
-      new ServicoCampanhas(repositorio, notificacoes),
-      autenticacao
-    ),
-    controladorOngs: new ControladorOngs(new ServicoOngs(repositorio)),
-    controladorEventos: new ControladorEventos(notificacoes),
-    controladorDenuncias: new ControladorDenuncias(new ServicoDenuncias(repositorio, notificacoes)),
-    controladorDoacoes: new ControladorDoacoes(new ServicoDoacoes(repositorio, notificacoes)),
-    controladorVoluntariado: new ControladorVoluntariado(
-      new ServicoVoluntariado(repositorio, notificacoes)
-    )
-  });
+  roteador.get("/api/health", (contexto) => sistemaController.mostrarSaude(contexto));
+  roteador.get("/api/config", (contexto) => sistemaController.mostrarConfiguracao(contexto));
+  roteador.get("/api/dashboard", (contexto) => catalogoController.mostrarPainel(contexto));
+
+  roteador.post("/api/auth/visitor", (contexto) =>
+    autenticacaoController.entrarComoVisitante(contexto)
+  );
+  roteador.post("/api/auth/ngo", (contexto) => autenticacaoController.entrarComoOng(contexto));
+  roteador.get("/api/auth/me", (contexto) => autenticacaoController.mostrarUsuario(contexto));
+  roteador.post("/api/auth/logout", (contexto) => autenticacaoController.sair(contexto));
+
+  roteador.get("/api/campaigns", (contexto) => catalogoController.listarCampanhas(contexto));
+  roteador.post("/api/campaigns", (contexto) => catalogoController.criarCampanha(contexto));
+  roteador.get("/api/campaigns/:id", (contexto) => catalogoController.detalharCampanha(contexto));
+  roteador.get("/api/ngos", (contexto) => catalogoController.listarOngs(contexto));
+  roteador.get("/api/donations", (contexto) => catalogoController.listarDoacoes(contexto));
+  roteador.post("/api/donations", (contexto) => catalogoController.criarDoacao(contexto));
+
+  roteador.get("/api/reports", (contexto) => comunidadeController.listarDenuncias(contexto));
+  roteador.post("/api/reports", (contexto) => comunidadeController.criarDenuncia(contexto));
+  roteador.get("/api/volunteer-applications", (contexto) =>
+    comunidadeController.listarCandidaturas(contexto)
+  );
+  roteador.post("/api/volunteer-applications", (contexto) =>
+    comunidadeController.criarCandidatura(contexto)
+  );
+
+  roteador.get("/api/events", (contexto) => eventosController.transmitir(contexto));
 
   return new ServidorAplicacao(
     configuracao,
     roteador,
-    new ControladorArquivosEstaticos(configuracao.pastaFrontend)
+    new ArquivosEstaticosController(configuracao.pastaFrontend)
   );
 }
