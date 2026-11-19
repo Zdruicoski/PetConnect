@@ -1,4 +1,4 @@
-import type { TipoUsuario, Usuario, UsuarioComSenha } from "../entity/modelos";
+import { type TipoUsuario, Usuario, UsuarioComSenha } from "../entity/Usuario";
 import type { Banco, Consultor } from "./Banco";
 
 type Linha = Record<string, any>;
@@ -7,6 +7,7 @@ export type NovoUsuario = {
   id: string;
   name: string;
   email: string | null;
+  cpf?: string | null;
   passwordHash: string | null;
   type: TipoUsuario;
   ngoId: string | null;
@@ -26,12 +27,13 @@ export class UsuarioRepository {
 
   async inserir(usuario: NovoUsuario, consultor: Consultor = this.banco): Promise<void> {
     await consultor.consultar(
-      `INSERT INTO users (id, name, email, password_hash, type, ngo_id)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
+      `INSERT INTO users (id, name, email, cpf, password_hash, type, ngo_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
         usuario.id,
         usuario.name,
         usuario.email,
+        usuario.cpf ?? null,
         usuario.passwordHash,
         usuario.type,
         usuario.ngoId
@@ -43,7 +45,12 @@ export class UsuarioRepository {
     const linhas = await this.banco.consultar<Linha>(`${selecionarUsuario} WHERE u.email = $1`, [
       email
     ]);
-    return linhas[0] && { ...paraUsuario(linhas[0]), passwordHash: linhas[0].password_hash };
+    if (!linhas[0]) return undefined;
+    const base = paraUsuario(linhas[0]);
+    return new UsuarioComSenha({
+      ...base,
+      passwordHash: linhas[0].password_hash
+    });
   }
 
   async criarSessao(token: string, usuarioId: string): Promise<void> {
@@ -79,11 +86,12 @@ export class UsuarioRepository {
 }
 
 function paraUsuario(linha: Linha): Usuario {
-  return {
+  return new Usuario({
     id: linha.id,
     name: linha.name,
     type: linha.type as TipoUsuario,
+    cpf: linha.cpf ?? null,
     ngoId: linha.ngo_id,
     ngoName: linha.ngo_name
-  };
+  });
 }

@@ -1,4 +1,5 @@
-import type { CandidaturaVoluntario, Denuncia, StatusDenuncia, UrgenciaDenuncia } from "../entity/modelos";
+import { CandidaturaVoluntario } from "../entity/CandidaturaVoluntario";
+import { Denuncia, type StatusDenuncia, type UrgenciaDenuncia } from "../entity/Denuncia";
 import type { Banco, Consultor } from "./Banco";
 
 type Linha = Record<string, any>;
@@ -68,7 +69,7 @@ export class ComunidadeRepository {
 }
 
 function paraDenuncia(linha: Linha): Denuncia {
-  return {
+  return new Denuncia({
     id: linha.id,
     title: linha.title,
     description: linha.description,
@@ -79,16 +80,16 @@ function paraDenuncia(linha: Linha): Denuncia {
     lng: Number(linha.lng),
     status: linha.status as StatusDenuncia,
     createdAt: new Date(linha.created_at).toISOString()
-  };
+  });
 }
 
 function paraCandidatura(linha: Linha): CandidaturaVoluntario {
-  return {
+  return new CandidaturaVoluntario({
     id: linha.id,
     name: linha.name,
     email: linha.email,
     role: linha.role,
     message: linha.message,
     createdAt: new Date(linha.created_at).toISOString()
-  };
+  });
 }

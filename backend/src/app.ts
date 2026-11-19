@@ -32,7 +32,7 @@ export async function criarAplicacao(configuracao: Configuracao): Promise<Servid
   ).semear();
 
   const notificacoes = new NotificacaoService();
-  const autenticacao = new AutenticacaoService(usuarioRepository);
+  const autenticacao = new AutenticacaoService(usuarioRepository, catalogoRepository);
   const catalogo = new CatalogoService(catalogoRepository, comunidadeRepository, notificacoes);
   const comunidade = new ComunidadeService(comunidadeRepository, notificacoes);
 
@@ -50,7 +50,13 @@ export async function criarAplicacao(configuracao: Configuracao): Promise<Servid
   roteador.post("/api/auth/visitor", (contexto) =>
     autenticacaoController.entrarComoVisitante(contexto)
   );
+  roteador.post("/api/auth/visitor/register", (contexto) =>
+    autenticacaoController.cadastrarVisitante(contexto)
+  );
   roteador.post("/api/auth/ngo", (contexto) => autenticacaoController.entrarComoOng(contexto));
+  roteador.post("/api/auth/ngo/register", (contexto) =>
+    autenticacaoController.cadastrarOng(contexto)
+  );
   roteador.get("/api/auth/me", (contexto) => autenticacaoController.mostrarUsuario(contexto));
   roteador.post("/api/auth/logout", (contexto) => autenticacaoController.sair(contexto));
 

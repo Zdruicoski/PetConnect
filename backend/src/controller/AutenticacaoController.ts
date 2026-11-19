@@ -14,9 +14,19 @@ export class AutenticacaoController {
     RespostaHttp.json(contexto.resposta, 200, await this.servico.entrarComoVisitante(dados));
   }
 
+  async cadastrarVisitante(contexto: ContextoRequisicao): Promise<void> {
+    const dados = await CorpoRequisicao.lerJson(contexto.requisicao);
+    RespostaHttp.json(contexto.resposta, 201, await this.servico.cadastrarVisitante(dados));
+  }
+
   async entrarComoOng(contexto: ContextoRequisicao): Promise<void> {
     const dados = await CorpoRequisicao.lerJson(contexto.requisicao);
     RespostaHttp.json(contexto.resposta, 200, await this.servico.entrarComoOng(dados));
+  }
+
+  async cadastrarOng(contexto: ContextoRequisicao): Promise<void> {
+    const dados = await CorpoRequisicao.lerJson(contexto.requisicao);
+    RespostaHttp.json(contexto.resposta, 201, await this.servico.cadastrarOng(dados));
   }
 
   async mostrarUsuario(contexto: ContextoRequisicao): Promise<void> {

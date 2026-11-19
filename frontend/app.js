@@ -45,8 +45,18 @@ function vincularElementos() {
   elementos.loginButton = document.querySelector("#loginButton");
   elementos.logoutButton = document.querySelector("#logoutButton");
   elementos.visitorLoginForm = document.querySelector("#visitorLoginForm");
+  elementos.visitorRegisterForm = document.querySelector("#visitorRegisterForm");
+  elementos.visitorLoginError = document.querySelector("#visitorLoginError");
+  elementos.visitorRegisterError = document.querySelector("#visitorRegisterError");
+  elementos.btnToggleVisitorRegister = document.querySelector("#btnToggleVisitorRegister");
+  elementos.btnToggleVisitorLogin = document.querySelector("#btnToggleVisitorLogin");
   elementos.ngoLoginForm = document.querySelector("#ngoLoginForm");
   elementos.ngoLoginError = document.querySelector("#ngoLoginError");
+  elementos.ngoRegisterForm = document.querySelector("#ngoRegisterForm");
+  elementos.ngoRegisterError = document.querySelector("#ngoRegisterError");
+  elementos.btnToggleNgoRegister = document.querySelector("#btnToggleNgoRegister");
+  elementos.btnToggleNgoLogin = document.querySelector("#btnToggleNgoLogin");
+  elementos.voluntariado = document.querySelector("#voluntariado");
   elementos.newCampaignButton = document.querySelector("#newCampaignButton");
   elementos.campaignModal = document.querySelector("#campaignModal");
   elementos.campaignForm = document.querySelector("#campaignForm");
@@ -65,7 +75,51 @@ function vincularEventosInterface() {
   });
   elementos.logoutButton.addEventListener("click", sair);
   elementos.visitorLoginForm.addEventListener("submit", entrarComoVisitante);
+  elementos.visitorRegisterForm.addEventListener("submit", cadastrarVisitante);
   elementos.ngoLoginForm.addEventListener("submit", entrarComoOng);
+  elementos.ngoRegisterForm.addEventListener("submit", cadastrarOng);
+
+  elementos.btnToggleVisitorRegister?.addEventListener("click", () => {
+    elementos.visitorLoginForm.hidden = true;
+    elementos.visitorRegisterForm.hidden = false;
+    elementos.visitorLoginError.hidden = true;
+    elementos.visitorRegisterError.hidden = true;
+  });
+
+  elementos.btnToggleVisitorLogin?.addEventListener("click", () => {
+    elementos.visitorRegisterForm.hidden = true;
+    elementos.visitorLoginForm.hidden = false;
+    elementos.visitorLoginError.hidden = true;
+    elementos.visitorRegisterError.hidden = true;
+  });
+
+  elementos.btnToggleNgoRegister?.addEventListener("click", () => {
+    elementos.ngoLoginForm.hidden = true;
+    elementos.ngoRegisterForm.hidden = false;
+    if (elementos.ngoLoginError) elementos.ngoLoginError.hidden = true;
+    if (elementos.ngoRegisterError) elementos.ngoRegisterError.hidden = true;
+  });
+
+  elementos.btnToggleNgoLogin?.addEventListener("click", () => {
+    elementos.ngoRegisterForm.hidden = true;
+    elementos.ngoLoginForm.hidden = false;
+    if (elementos.ngoLoginError) elementos.ngoLoginError.hidden = true;
+    if (elementos.ngoRegisterError) elementos.ngoRegisterError.hidden = true;
+  });
+
+  document.querySelectorAll(".toggle-password-btn").forEach((botao) => {
+    botao.addEventListener("click", () => {
+      const input = botao.closest(".password-field-wrapper")?.querySelector("input");
+      if (!input) return;
+      const isSenha = input.type === "password";
+      input.type = isSenha ? "text" : "password";
+      const eyeOpen = botao.querySelector(".eye-open");
+      const eyeOff = botao.querySelector(".eye-off");
+      if (eyeOpen) eyeOpen.hidden = isSenha;
+      if (eyeOff) eyeOff.hidden = !isSenha;
+      botao.title = isSenha ? "Ocultar senha" : "Mostrar senha";
+    });
+  });
   elementos.newCampaignButton.addEventListener("click", () => {
     elementos.campaignError.hidden = true;
     elementos.campaignModal.showModal();
@@ -542,6 +596,10 @@ function atualizarBotaoLogin() {
   elementos.loginButton.classList.toggle("session-name", Boolean(estado.user));
   elementos.logoutButton.hidden = !estado.user;
   elementos.newCampaignButton.hidden = !ehOng;
+
+  if (elementos.voluntariado) {
+    elementos.voluntariado.hidden = Boolean(estado.user);
+  }
 }
 
 function lerArmazenamento(chave) {
@@ -584,6 +642,10 @@ function selecionarAbaLogin(aba) {
   document.querySelectorAll("[data-login-panel]").forEach((painel) => {
     painel.hidden = painel.dataset.loginPanel !== aba;
   });
+  if (elementos.visitorLoginError) elementos.visitorLoginError.hidden = true;
+  if (elementos.visitorRegisterError) elementos.visitorRegisterError.hidden = true;
+  if (elementos.ngoLoginError) elementos.ngoLoginError.hidden = true;
+  if (elementos.ngoRegisterError) elementos.ngoRegisterError.hidden = true;
 }
 
 function concluirLogin(resultado) {
@@ -594,23 +656,53 @@ function concluirLogin(resultado) {
   exibirAlerta(
     resultado.user.type === "ong"
       ? `Olá, ${resultado.user.name}. Você já pode abrir campanhas.`
-      : `Olá, ${resultado.user.name}. Alertas ativados.`
+      : `Olá, ${resultado.user.name}. Bem-vindo ao PetConnect!`
   );
 }
 
 async function entrarComoVisitante(evento) {
   evento.preventDefault();
   const formulario = new FormData(elementos.visitorLoginForm);
+  elementos.visitorLoginError.hidden = true;
 
   try {
     concluirLogin(
       await buscarJson("/api/auth/visitor", {
         method: "POST",
-        body: JSON.stringify({ name: formulario.get("name") })
+        body: JSON.stringify({
+          email: formulario.get("email"),
+          password: formulario.get("password")
+        })
       })
     );
+    elementos.visitorLoginForm.reset();
   } catch (erro) {
-    exibirAlerta(erro.message);
+    elementos.visitorLoginError.textContent = erro.message;
+    elementos.visitorLoginError.hidden = false;
+  }
+}
+
+async function cadastrarVisitante(evento) {
+  evento.preventDefault();
+  const formulario = new FormData(elementos.visitorRegisterForm);
+  elementos.visitorRegisterError.hidden = true;
+
+  try {
+    concluirLogin(
+      await buscarJson("/api/auth/visitor/register", {
+        method: "POST",
+        body: JSON.stringify({
+          name: formulario.get("name"),
+          email: formulario.get("email"),
+          cpf: formulario.get("cpf"),
+          password: formulario.get("password")
+        })
+      })
+    );
+    elementos.visitorRegisterForm.reset();
+  } catch (erro) {
+    elementos.visitorRegisterError.textContent = erro.message;
+    elementos.visitorRegisterError.hidden = false;
   }
 }
 
@@ -647,6 +739,30 @@ async function sair() {
   estado.user = null;
   atualizarBotaoLogin();
   exibirAlerta("Você saiu da sua conta.");
+}
+
+async function cadastrarOng(evento) {
+  evento.preventDefault();
+  const formulario = new FormData(elementos.ngoRegisterForm);
+  elementos.ngoRegisterError.hidden = true;
+
+  try {
+    concluirLogin(
+      await buscarJson("/api/auth/ngo/register", {
+        method: "POST",
+        body: JSON.stringify({
+          name: formulario.get("name"),
+          email: formulario.get("email"),
+          cnpj: formulario.get("cnpj"),
+          password: formulario.get("password")
+        })
+      })
+    );
+    elementos.ngoRegisterForm.reset();
+  } catch (erro) {
+    elementos.ngoRegisterError.textContent = erro.message;
+    elementos.ngoRegisterError.hidden = false;
+  }
 }
 
 async function abrirCampanha(evento) {

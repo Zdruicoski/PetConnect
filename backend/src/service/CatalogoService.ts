@@ -1,8 +1,18 @@
 import * as crypto from "crypto";
 
-import type { DadosCampanha, DadosDoacao, DetalheCampanhaDTO, PainelDTO } from "../dto/dtos";
-import { validarDadosCampanha, validarDadosDoacao } from "../dto/dtos";
-import type { Campanha, Doacao, Ong } from "../entity/modelos";
+import {
+  type DadosCampanha,
+  DetalheCampanhaDTO,
+  validarDadosCampanha
+} from "../dto/CampanhaDTO";
+import {
+  type DadosDoacao,
+  validarDadosDoacao
+} from "../dto/DoacaoDTO";
+import { PainelDTO } from "../dto/PainelDTO";
+import type { Campanha } from "../entity/Campanha";
+import { Doacao } from "../entity/Doacao";
+import type { Ong } from "../entity/Ong";
 import { ErroHttp } from "../ErroHttp";
 import type { CatalogoRepository } from "../repository/CatalogoRepository";
 import type { ComunidadeRepository } from "../repository/ComunidadeRepository";
@@ -45,7 +55,7 @@ export class CatalogoService {
       throw new ErroHttp(404, "ONG da campanha não encontrada.");
     }
 
-    return { campaign: campanha, ngo: ong, recentDonations: doacoesRecentes };
+    return new DetalheCampanhaDTO(campanha, ong, doacoesRecentes);
   }
 
   async abrirCampanha(ongId: string, dados: DadosCampanha): Promise<Campanha> {
@@ -81,11 +91,11 @@ export class CatalogoService {
   }
 
   async criarDoacao(dados: DadosDoacao): Promise<{ donation: Doacao; campaign: Campanha }> {
-    const doacao: Doacao = {
+    const doacao = new Doacao({
       id: `don-${crypto.randomUUID()}`,
       ...validarDadosDoacao(dados),
       createdAt: new Date().toISOString()
-    };
+    });
 
     const campanha = await this.catalogo.registrarDoacao(doacao);
 
@@ -112,16 +122,16 @@ export class CatalogoService {
       this.comunidade.listarDenuncias()
     ]);
 
-    return {
-      campaigns: campanhas,
-      ngos: ongs,
-      reports: denuncias,
-      stats: {
+    return new PainelDTO(
+      campanhas,
+      ongs,
+      denuncias,
+      {
         animalsHelped: ongs.reduce((total, ong) => total + ong.animalsHelped, 0),
         activeNgos: ongs.length,
         donors: campanhas.reduce((total, campanha) => total + campanha.supporters, 0),
         activeReports: denuncias.filter((denuncia) => denuncia.status !== "Resolvida").length
       }
-    };
+    );
   }
 }

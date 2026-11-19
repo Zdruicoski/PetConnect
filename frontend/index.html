@@ -195,34 +195,167 @@
     </dialog>
 
     <dialog class="modal" id="loginModal">
-      <div class="modal-box">
+      <div class="modal-box login-modal-box">
         <button class="icon-button close-button" type="button" data-close="loginModal" aria-label="Fechar">×</button>
-        <h3>Entrar no PetConnect</h3>
-        <div class="tab-row" role="tablist">
-          <button class="tab active" type="button" role="tab" data-login-tab="visitor">Sou visitante</button>
-          <button class="tab" type="button" role="tab" data-login-tab="ngo">Sou uma ONG</button>
+        
+        <div class="login-header">
+          <div class="login-icon-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+          </div>
+          <h3>Bem-vindo ao PetConnect</h3>
+          <p class="login-subtitle">Acesse sua conta para apoiar causas e fazer a diferença.</p>
         </div>
-        <form id="visitorLoginForm" data-login-panel="visitor">
-          <p class="form-hint">Entre com seu nome para apoiar campanhas e enviar denúncias.</p>
-          <label>
-            Nome de exibição
-            <input name="name" type="text" value="Visitante solidário" maxlength="80" required />
-          </label>
-          <button class="primary-button full-button" type="submit">Entrar como visitante</button>
-        </form>
-        <form id="ngoLoginForm" data-login-panel="ngo" hidden>
-          <p class="form-hint">Acesso para ONGs cadastradas. Após entrar, você pode abrir campanhas.</p>
-          <label>
-            Email da ONG
-            <input name="email" type="email" autocomplete="username" required />
-          </label>
-          <label>
-            Senha
-            <input name="password" type="password" autocomplete="current-password" required />
-          </label>
-          <p class="form-error" id="ngoLoginError" hidden></p>
-          <button class="primary-button full-button" type="submit">Entrar como ONG</button>
-        </form>
+
+        <div class="tab-row" role="tablist">
+          <button class="tab active" type="button" role="tab" data-login-tab="visitor">
+            Sou Visitante
+          </button>
+          <button class="tab" type="button" role="tab" data-login-tab="ngo">
+            Sou ONG
+          </button>
+        </div>
+
+        <!-- Painel Visitante -->
+        <div class="login-panel" data-login-panel="visitor">
+          <!-- Form Login Visitante -->
+          <form id="visitorLoginForm">
+            <label>
+              Email
+              <input name="email" type="email" placeholder="seu.email@exemplo.com" autocomplete="username" required />
+            </label>
+
+            <label>
+              Senha
+              <div class="password-field-wrapper">
+                <input name="password" type="password" placeholder="Sua senha" autocomplete="current-password" required />
+                <button type="button" class="toggle-password-btn" aria-label="Mostrar ou ocultar senha" title="Mostrar senha">
+                  <svg class="eye-icon eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg class="eye-icon eye-off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true" hidden><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                </button>
+              </div>
+            </label>
+
+            <p class="form-error" id="visitorLoginError" hidden></p>
+            <button class="primary-button full-button" type="submit">Entrar como Visitante</button>
+
+            <p class="auth-switch-text">
+              Não tem uma conta?
+              <button type="button" class="link-btn" id="btnToggleVisitorRegister">Cadastre-se aqui</button>
+            </p>
+          </form>
+
+          <!-- Form Cadastro Visitante -->
+          <form id="visitorRegisterForm" hidden>
+            <p class="form-hint">Crie seu perfil em segundos para acompanhar suas doações e denúncias.</p>
+            
+            <label>
+              Nome completo
+              <input name="name" type="text" placeholder="Ex.: Lucas Mendes" maxlength="80" required />
+            </label>
+
+            <label>
+              Email
+              <input name="email" type="email" placeholder="seu.email@exemplo.com" autocomplete="email" required />
+            </label>
+
+            <label>
+              CPF
+              <input name="cpf" type="text" placeholder="000.000.000-00" required />
+            </label>
+
+            <label>
+              Senha (mínimo 6 caracteres)
+              <div class="password-field-wrapper">
+                <input name="password" type="password" placeholder="Crie uma senha" minlength="6" autocomplete="new-password" required />
+                <button type="button" class="toggle-password-btn" aria-label="Mostrar ou ocultar senha" title="Mostrar senha">
+                  <svg class="eye-icon eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg class="eye-icon eye-off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true" hidden><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                </button>
+              </div>
+            </label>
+
+            <p class="form-error" id="visitorRegisterError" hidden></p>
+            <button class="primary-button full-button" type="submit">Criar conta e entrar</button>
+
+            <p class="auth-switch-text">
+              Já possui uma conta?
+              <button type="button" class="link-btn" id="btnToggleVisitorLogin">Fazer login</button>
+            </p>
+          </form>
+        </div>
+
+        <!-- Painel ONG -->
+        <div class="login-panel" data-login-panel="ngo" hidden>
+          <!-- Form Login ONG -->
+          <form id="ngoLoginForm">
+            <p class="form-hint">Acesso exclusivo para ONGs parceiras abrirem e gerenciarem campanhas solidárias.</p>
+
+            <label>
+              Email da ONG
+              <input name="email" type="email" placeholder="contato@ong.org" autocomplete="username" required />
+            </label>
+
+            <label>
+              Senha
+              <div class="password-field-wrapper">
+                <input name="password" type="password" placeholder="Senha da ONG" autocomplete="current-password" required />
+                <button type="button" class="toggle-password-btn" aria-label="Mostrar ou ocultar senha" title="Mostrar senha">
+                  <svg class="eye-icon eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg class="eye-icon eye-off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true" hidden><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                </button>
+              </div>
+            </label>
+
+            <p class="form-error" id="ngoLoginError" hidden></p>
+            <button class="primary-button full-button" type="submit">Entrar como ONG</button>
+
+            <p class="auth-switch-text">
+              Não tem cadastro?
+              <button type="button" class="link-btn" id="btnToggleNgoRegister">Registre sua ONG</button>
+            </p>
+          </form>
+
+          <!-- Form Cadastro ONG -->
+          <form id="ngoRegisterForm" hidden>
+            <p class="form-hint">Registre sua ONG para abrir campanhas e gerenciar doações.</p>
+
+            <label>
+              Nome da ONG
+              <input name="name" type="text" placeholder="Ex.: Amigos 4 Patas" maxlength="100" required />
+            </label>
+
+            <label>
+              Email
+              <input name="email" type="email" placeholder="contato@ong.org" autocomplete="email" required />
+            </label>
+
+            <label>
+              CNPJ
+              <input name="cnpj" type="text" placeholder="00.000.000/0001-00" required />
+            </label>
+
+            <label>
+              Senha (mínimo 6 caracteres)
+              <div class="password-field-wrapper">
+                <input name="password" type="password" placeholder="Crie uma senha" minlength="6" autocomplete="new-password" required />
+                <button type="button" class="toggle-password-btn" aria-label="Mostrar ou ocultar senha" title="Mostrar senha">
+                  <svg class="eye-icon eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg class="eye-icon eye-off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true" hidden><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                </button>
+              </div>
+            </label>
+
+            <p class="form-error" id="ngoRegisterError" hidden></p>
+            <button class="primary-button full-button" type="submit">Registrar ONG</button>
+
+            <p class="auth-switch-text">
+              Já tem cadastro?
+              <button type="button" class="link-btn" id="btnToggleNgoLogin">Fazer login</button>
+            </p>
+          </form>
+        </div>
       </div>
     </dialog>
 

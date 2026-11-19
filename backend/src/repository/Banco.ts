@@ -10,6 +10,7 @@ const comandosEsquema = [
   `CREATE TABLE IF NOT EXISTS ngos (
      id TEXT PRIMARY KEY,
      name TEXT NOT NULL,
+     cnpj TEXT DEFAULT '',
      city TEXT NOT NULL DEFAULT '',
      about TEXT NOT NULL DEFAULT '',
      animals_helped INTEGER NOT NULL DEFAULT 0,
@@ -18,6 +19,7 @@ const comandosEsquema = [
      image_url TEXT NOT NULL DEFAULT '',
      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
    )`,
+  `ALTER TABLE ngos ADD COLUMN IF NOT EXISTS cnpj TEXT DEFAULT ''`,
   `CREATE TABLE IF NOT EXISTS campaigns (
      id TEXT PRIMARY KEY,
      ngo_id TEXT NOT NULL REFERENCES ngos (id) ON DELETE CASCADE,
@@ -64,11 +66,13 @@ const comandosEsquema = [
      id TEXT PRIMARY KEY,
      name TEXT NOT NULL,
      email TEXT UNIQUE,
+     cpf TEXT DEFAULT '',
      password_hash TEXT,
      type TEXT NOT NULL CHECK (type IN ('visitante', 'ong')),
      ngo_id TEXT REFERENCES ngos (id) ON DELETE SET NULL,
      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
    )`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS cpf TEXT DEFAULT ''`,
   `CREATE TABLE IF NOT EXISTS sessions (
      token TEXT PRIMARY KEY,
      user_id TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,

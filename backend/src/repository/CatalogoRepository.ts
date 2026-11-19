@@ -1,4 +1,6 @@
-import type { Campanha, Doacao, NovaCampanha, Ong, TipoDoacao } from "../entity/modelos";
+import { Campanha, type NovaCampanha } from "../entity/Campanha";
+import { Doacao, type TipoDoacao } from "../entity/Doacao";
+import { Ong, type OngProps } from "../entity/Ong";
 import type { Banco, Consultor } from "./Banco";
 
 type Linha = Record<string, any>;
@@ -13,7 +15,7 @@ export type CampanhaParaInserir = NovaCampanha & {
 };
 
 const colunasOng =
-  "id, name, city, about, animals_helped, volunteers, active_campaigns, image_url";
+  "id, name, cnpj, city, about, animals_helped, volunteers, active_campaigns, image_url";
 
 const selecionarCampanha = `
   SELECT c.*, o.name AS ngo_name
@@ -45,13 +47,22 @@ export class CatalogoRepository {
   }
 
   async inserirOng(
-    ong: Omit<Ong, "activeCampaigns">,
+    ong: Omit<OngProps, "activeCampaigns">,
     consultor: Consultor = this.banco
   ): Promise<void> {
     await consultor.consultar(
-      `INSERT INTO ngos (id, name, city, about, animals_helped, volunteers, active_campaigns, image_url)
-       VALUES ($1, $2, $3, $4, $5, $6, 0, $7)`,
-      [ong.id, ong.name, ong.city, ong.about, ong.animalsHelped, ong.volunteers, ong.imageUrl]
+      `INSERT INTO ngos (id, name, cnpj, city, about, animals_helped, volunteers, active_campaigns, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 0, $8)`,
+      [
+        ong.id,
+        ong.name,
+        ong.cnpj || "",
+        ong.city,
+        ong.about,
+        ong.animalsHelped,
+        ong.volunteers,
+        ong.imageUrl
+      ]
     );
   }
 
@@ -159,20 +170,21 @@ export class CatalogoRepository {
 }
 
 function paraOng(linha: Linha): Ong {
-  return {
+  return new Ong({
     id: linha.id,
     name: linha.name,
+    cnpj: linha.cnpj || "",
     city: linha.city,
     about: linha.about,
     animalsHelped: Number(linha.animals_helped),
     volunteers: Number(linha.volunteers),
     activeCampaigns: Number(linha.active_campaigns),
     imageUrl: linha.image_url
-  };
+  });
 }
 
 function paraCampanha(linha: Linha): Campanha {
-  return {
+  return new Campanha({
     id: linha.id,
     ngoId: linha.ngo_id,
     title: linha.title,
@@ -185,11 +197,11 @@ function paraCampanha(linha: Linha): Campanha {
     donations: Number(linha.donations),
     imageUrl: linha.image_url,
     createdAt: new Date(linha.created_at).toISOString()
-  };
+  });
 }
 
 function paraDoacao(linha: Linha): Doacao {
-  return {
+  return new Doacao({
     id: linha.id,
     campaignId: linha.campaign_id,
     donorName: linha.donor_name,
@@ -197,5 +209,5 @@ function paraDoacao(linha: Linha): Doacao {
     amount: Number(linha.amount),
     foodDescription: linha.food_description,
     createdAt: new Date(linha.created_at).toISOString()
-  };
+  });
 }

@@ -1,8 +1,15 @@
 import * as crypto from "crypto";
 
-import type { DadosCandidaturaVoluntario, DadosDenuncia } from "../dto/dtos";
-import { validarDadosCandidatura, validarDadosDenuncia } from "../dto/dtos";
-import type { CandidaturaVoluntario, Denuncia } from "../entity/modelos";
+import {
+  type DadosCandidaturaVoluntario,
+  validarDadosCandidatura
+} from "../dto/CandidaturaVoluntarioDTO";
+import {
+  type DadosDenuncia,
+  validarDadosDenuncia
+} from "../dto/DenunciaDTO";
+import { CandidaturaVoluntario } from "../entity/CandidaturaVoluntario";
+import { Denuncia } from "../entity/Denuncia";
 import type { ComunidadeRepository } from "../repository/ComunidadeRepository";
 import type { NotificacaoService } from "./NotificacaoService";
 
@@ -22,12 +29,12 @@ export class ComunidadeService {
   }
 
   async criarDenuncia(dados: DadosDenuncia): Promise<Denuncia> {
-    const denuncia: Denuncia = {
+    const denuncia = new Denuncia({
       id: `rep-${crypto.randomUUID()}`,
       ...validarDadosDenuncia(dados),
       status: "Nova",
       createdAt: new Date().toISOString()
-    };
+    });
 
     await this.comunidade.inserirDenuncia(denuncia);
 
@@ -48,11 +55,11 @@ export class ComunidadeService {
   async criarCandidatura(
     dados: DadosCandidaturaVoluntario
   ): Promise<CandidaturaVoluntario> {
-    const candidatura: CandidaturaVoluntario = {
+    const candidatura = new CandidaturaVoluntario({
       id: `vol-${crypto.randomUUID()}`,
       ...validarDadosCandidatura(dados),
       createdAt: new Date().toISOString()
-    };
+    });
 
     await this.comunidade.inserirCandidatura(candidatura);
 

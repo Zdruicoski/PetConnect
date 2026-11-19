@@ -1,6 +1,7 @@
 import * as crypto from "crypto";
 
-import type { Denuncia, NovaCampanha, Ong } from "../entity/modelos";
+import type { NovaCampanha } from "../entity/Campanha";
+import type { OngProps } from "../entity/Ong";
 import { Senha } from "../service/AutenticacaoService";
 import type { Banco } from "./Banco";
 import type { CatalogoRepository } from "./CatalogoRepository";
@@ -9,7 +10,7 @@ import type { UsuarioRepository } from "./UsuarioRepository";
 
 const senhaDemonstracaoOngs = "petconnect123";
 
-type OngInicial = Omit<Ong, "activeCampaigns"> & { email: string };
+type OngInicial = Omit<OngProps, "activeCampaigns"> & { email: string };
 
 type CampanhaInicial = NovaCampanha & {
   id: string;
@@ -18,8 +19,6 @@ type CampanhaInicial = NovaCampanha & {
   supporters: number;
   donations: number;
 };
-
-type DenunciaInicial = Omit<Denuncia, "createdAt"> & { minutosAtras: number };
 
 const ongsIniciais: OngInicial[] = [
   {
@@ -102,33 +101,6 @@ const campanhasIniciais: CampanhaInicial[] = [
   }
 ];
 
-const denunciasIniciais: DenunciaInicial[] = [
-  {
-    id: "rep-centro",
-    title: "Cachorro ferido próximo ao Centro",
-    description: "Animal de porte médio aparenta estar mancando e precisa de avaliação.",
-    urgency: "Alta",
-    reporterName: "Equipe PetConnect",
-    address: "Centro, Tubarão - SC",
-    lat: -28.4819,
-    lng: -49.0067,
-    status: "Nova",
-    minutosAtras: 35
-  },
-  {
-    id: "rep-oficinas",
-    title: "Gata com filhotes em terreno aberto",
-    description: "Moradores relataram ninhada em área sem proteção.",
-    urgency: "Média",
-    reporterName: "Equipe PetConnect",
-    address: "Oficinas, Tubarão - SC",
-    lat: -28.4688,
-    lng: -49.0182,
-    status: "Em análise",
-    minutosAtras: 90
-  }
-];
-
 const emailsIniciaisPorOng: Record<string, string> = Object.fromEntries(
   ongsIniciais.map(({ id, email }) => [id, email])
 );
@@ -157,7 +129,11 @@ export class Semeador {
       console.log("Banco populado com os dados iniciais.");
     }
 
+    // Limpa todas as denúncias registradas no banco para permitir testes do zero
+    await this.banco.consultar("DELETE FROM reports");
+
     await this.garantirUsuariosDasOngs();
+    await this.garantirUsuarioVisitanteTeste();
   }
 
   private async semearDadosIniciais(): Promise<void> {
@@ -170,16 +146,6 @@ export class Semeador {
       for (const [indice, campanha] of campanhasIniciais.entries()) {
         await this.catalogo.inserirCampanha(
           { ...campanha, createdAt: new Date(Date.now() - indice * 60_000) },
-          consultor
-        );
-      }
-
-      for (const { minutosAtras, ...denuncia } of denunciasIniciais) {
-        await this.comunidade.inserirDenuncia(
-          {
-            ...denuncia,
-            createdAt: new Date(Date.now() - minutosAtras * 60_000).toISOString()
-          },
           consultor
         );
       }
@@ -209,5 +175,27 @@ export class Semeador {
 
       console.log(`Conta de ONG criada: ${email} (senha: ${senhaDemonstracaoOngs})`);
     }
+  }
+
+  // Garante que exista um usuário visitante de teste para demonstração.
+  private async garantirUsuarioVisitanteTeste(): Promise<void> {
+    const emailVisitante = "visitante@petconnect.com";
+    const usuarioExistente = await this.usuarios.buscarPorEmail(emailVisitante);
+
+    if (usuarioExistente) {
+      return;
+    }
+
+    const senhaHash = Senha.gerarHash(senhaDemonstracaoOngs);
+    await this.usuarios.inserir({
+      id: "usr-visitante-teste",
+      name: "Visitante Solidário (Teste)",
+      email: emailVisitante,
+      passwordHash: senhaHash,
+      type: "visitante",
+      ngoId: null
+    });
+
+    console.log(`Conta de Visitante criada: ${emailVisitante} (senha: ${senhaDemonstracaoOngs})`);
   }
 }
